@@ -14,13 +14,15 @@ describe('Integration', function () {
             });
         });
 
-        xit('should open a socket when starting client', function (done) {
+        it('should open a socket when starting client', function (done) {
             var client = new Client();    
             var server = new Server();    
             server.listen(function () {
-                client.connect(function () {
-                    server.shutdown(done);
-                });
+                setTimeout(function () {
+                    client.connect(function () {
+                        server.shutdown(done);
+                    });
+                }, 5);
             });
         });
         
