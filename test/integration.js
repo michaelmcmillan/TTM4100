@@ -109,8 +109,14 @@ describe('Integration', function () {
             var messages = 0;
             mike.observers.onMessage.push(function (msg) {
                 if (++messages === 2) {
-                    assert.equal(msg.content[0], 'thor');
-                    assert.equal(msg.content[1], undefined);
+                    try {
+                        assert.equal(msg.content[0], 'thor');
+                        assert.equal(msg.content[1], 'mike');
+                    } catch (e) {
+                        assert.equal(e.name, 'AssertionError');
+                        assert.equal(msg.content[1], 'thor');
+                        assert.equal(msg.content[0], 'mike');
+                    }
                     server.shutdown();
                     done();
                 }

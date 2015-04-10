@@ -187,7 +187,7 @@ function Server (host, port) {
 
             // Respond with clients on 'names' 
             if (parsedInput.request === 'names')
-                return self.send('info', self.getAuthorizedNicknames(client.nickname), 'server', client);
+                return self.send('info', self.getAuthorizedNicknames(), 'server', client);
             
             // Broadcast message
             if (parsedInput.request === 'msg')
@@ -195,13 +195,10 @@ function Server (host, port) {
         }
     }    
     
-    this.getAuthorizedNicknames = function (nicknameToFilterOut) {
+    this.getAuthorizedNicknames = function () {
         var self = this;
         var nicknames = [];
         self.clients.authorized.forEach(function (authorizedClient) {
-            if (nicknameToFilterOut !== undefined
-            &&  authorizedClient.nickname === nicknameToFilterOut)
-                return true;
             nicknames.push(authorizedClient.nickname);
         });
         return nicknames;
