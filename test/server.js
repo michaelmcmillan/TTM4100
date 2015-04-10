@@ -20,6 +20,13 @@ describe('Server', function () {
                server.parse(JSON.stringify({request: 'help', content: 'please'}));
            });
         });
+
+        it('should treat empty string as null in content-field', function () {
+           var server = new Server();
+           assert.doesNotThrow(function () {
+               server.parse(JSON.stringify({request: 'help', content: ''}));
+           });
+        });
     });
 
     describe('nickname', function () {

@@ -38,6 +38,8 @@ function Server (host, port) {
 
         var command = input.request; 
         var content = input.content; 
+        
+        if (content === '') content = null;
 
         if (supportedCommands.indexOf(command) === -1)
             throw new Error('Ugyldig kommando: ' + command);
