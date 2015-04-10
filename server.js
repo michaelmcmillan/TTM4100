@@ -131,15 +131,15 @@ function Server (host, port) {
     this.destroyClient = function (client) {
         var self = this; 
 
-        var userPool = self.isAuthorized(client)
-        ? self.clients.authorized : self.clients.unauthorized;
+        var userPool = self.isAuthorized(client) ? self.clients.authorized : self.clients.unauthorized;
         userPool.splice(userPool.indexOf(client), 1);
-        client.destroy();
 
         if (client.nickname !== undefined) 
             log('error', client.nickname + ' disconnected.');
-        else
+        else if (client.destroyed === false)
             log('error', client.ip + ' disconnected.');
+
+        client.destroy();
     }
 
     this.onMessage = function (input, client) {
@@ -221,7 +221,10 @@ function Server (host, port) {
             });  
             
             var parser = jsonStream.parse();
-            client.pipe(parser);
+            client.pipe(parser).on('error', function () {
+                self.send('error', 'Wrong data format. Must be valid JSON.', 'server', client);
+                self.destroyClient(client);
+            });
             
             parser.on('root', function (message) {
                 self.onMessage(JSON.stringify(message), client); 
