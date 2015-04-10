@@ -1,4 +1,5 @@
 var assert = require('assert');
+var net    = require('net');
 var Server = require('../server.js');
 var Client = require('../client.js');
 
@@ -300,6 +301,26 @@ describe('Integration', function () {
                 server.shutdown();
                 done();
             });
+        });
+
+        it('should be returned when payload is single-quoted JSON', function (done) {
+            var server = new Server();    
+
+            server.listen(function () {
+                var raw = new net.Socket();
+                raw.connect(1337, '127.0.0.1', function () {
+                    raw.write('{\n' + 
+                    '    \'request\': \'help\'\n' +
+                    '    \'content\': null\n' +
+                    '}');
+                });
+                raw.on('data', function (chunk) {
+                    assert.equal(JSON.parse(chunk.toString()).response, 'error');
+                    assert.equal(JSON.parse(chunk.toString()).content.match(/JSON/i).index > 0, true);
+                    done();
+                });
+            });
+
         });
     });
 });
