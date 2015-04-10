@@ -1,2 +1,2 @@
 # TTM4100
-Chat protocol with client and server.
+Chat protocol with client and server in Javascript. 
