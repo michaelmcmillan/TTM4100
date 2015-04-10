@@ -75,10 +75,6 @@ function Client (host, port) {
         var payload = this.parse(input);
         socket.write(payload, done);    
     }
-
-    this.disconnect = function (done) {
-        var self = this;
-    }
 }
 
 /* Main */
