@@ -18,11 +18,10 @@ describe('Integration', function () {
             var client = new Client();    
             var server = new Server();    
             server.listen(function () {
-                setTimeout(function () {
-                    client.connect(function () {
-                        server.shutdown(done);
-                    });
-                }, 5);
+                client.connect(function () {
+                    server.shutdown();
+                    done();
+                });
             });
         });
         
