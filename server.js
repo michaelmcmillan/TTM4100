@@ -132,9 +132,12 @@ function Server (host, port) {
         var userPool = self.isAuthorized(client)
         ? self.clients.authorized : self.clients.unauthorized;
         userPool.splice(userPool.indexOf(client), 1);
-
         client.destroy();
-        log('error', 'A user disconnected');
+
+        if (client.nickname !== undefined) 
+            log('error', client.nickname + ' disconnected.');
+        else
+            log('error', client.ip + ' disconnected.');
     }
 
     this.onMessage = function (input, client) {
@@ -206,8 +209,9 @@ function Server (host, port) {
         var self = this;
 
         socket = net.createServer(function (client) {
-            
-            log('success', client.remoteAddress + ' connected.');
+            client.ip = client.remoteAddress;  
+
+            log('success', client.ip + ' connected.');
 
             self.clients.unauthorized.push(client);
             self.observers.onConnect.forEach(function (observer) {
@@ -225,7 +229,7 @@ function Server (host, port) {
             });
 
             client.on('end', function () {
-                log('error', 'A user disconnected.');
+                self.destroyClient(client);
             });
         });
 
