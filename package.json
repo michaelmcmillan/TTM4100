@@ -1,0 +1,17 @@
+{
+  "name": "TTM4100",
+  "version": "1.0.0",
+  "description": "Et implementasjon av en chat-protokoll definert i assignment.pdf.",
+  "main": "index.js",
+  "scripts": {
+    "test": "export TEST=True; ./node_modules/mocha/bin/mocha test/client.js test/server.js test/integration.js"
+  },
+  "author": "Michael McMillan <email@michaelmcmillan.net> (http://michaelmcmillan.net)",
+  "license": "ISC",
+  "devDependencies": {
+    "mocha": "^2.2.4"
+  },
+  "dependencies": {
+    "JSONStream": "^0.10.0"
+  }
+}
