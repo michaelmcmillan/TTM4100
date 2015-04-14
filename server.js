@@ -65,7 +65,7 @@ function Server (host, port) {
         return nickname.match(/^[a-z0-9]+$/i); 
     }
 
-    this.constructPayload = function (level, content, sender) {
+    this.constructPayload = function (response, content, sender, timestamp) {
         var nickname; 
 
         if (typeof sender === 'string')
@@ -75,9 +75,9 @@ function Server (host, port) {
             nickname = sender.nickname;
 
         var payload = {
-            response: level,
+            response: response,
             content: content,
-            timestamp: new Date(),
+            timestamp: timestamp,
             sender: nickname 
         }
 
@@ -102,21 +102,21 @@ function Server (host, port) {
     
     this.sendHistory = function (client) {
         history.forEach(function(message) {
-            self.send('history', message[0], message[1], client);
+            self.send('history', message[0], message[1], message[2], client);
         });
     }
 
-    this.broadcast = function (level, content, sender, done) {
-        history.push([content, sender.nickname]);
+    this.broadcast = function (response, content, sender, timestamp, done) {
+        history.push([content, sender.nickname, timestamp]);
         log('info', sender.nickname + ': ' + content);
         self.clients.authorized.forEach(function (authorizedClient) {
             if (authorizedClient.nickname !== sender.nickname)
-                self.send(level, content, sender, authorizedClient);
+                self.send(response, content, sender, timestamp, authorizedClient);
         });
     }
     
-    this.send = function (level, content, sender, client, done) {
-        var payload = this.constructPayload(level, content, sender); 
+    this.send = function (response, content, sender, timestamp, client, done) {
+        var payload = this.constructPayload(response, content, sender, timestamp); 
         var self = this;
         try {
             if (client.writable)
@@ -147,13 +147,13 @@ function Server (host, port) {
         try {
             var parsedInput = self.parse(input.toString());
         } catch (error) {
-            self.send('error', error.message, 'server', client);
+            self.send('error', error.message, 'server', new Date(), client);
             return;
         }
         
         // Respond with help text on 'help' 
         if (parsedInput.request === 'help')
-            return self.send('info', 'You are on your own.', 'server', client);
+            return self.send('info', 'You are on your own.', 'server', new Date(), client);
     
         // Disconnect client upon 'logout'        
         if (parsedInput.request === 'logout')
@@ -166,7 +166,7 @@ function Server (host, port) {
             // Illegal commands when not authorized
             if (parsedInput.request === 'names'
             ||  parsedInput.request === 'msg')
-                self.send('error', 'Illegal command, you are not authorized.', 'server', client);
+                self.send('error', 'Illegal command, you are not authorized.', 'server', new Date(), client);
 
             // Authorize client and provide history on valid nickname
             if (parsedInput.request === 'login') {
@@ -175,9 +175,9 @@ function Server (host, port) {
                 if (self.getAuthorizedNicknames().indexOf(parsedInput.content) === -1) {
                     client.nickname = parsedInput.content;
                     self.authorize(client);
-                    self.send('info', 'Welcome to the chat ' + client.nickname + '!', 'server', client);
+                    self.send('info', 'Welcome to the chat ' + client.nickname + '!', 'server', new Date(), client);
                 } else {
-                    self.send('error', 'That username is taken.', 'server', client);
+                    self.send('error', 'That username is taken.', 'server', new Date(), client);
                 }
             }
         }
@@ -187,11 +187,11 @@ function Server (host, port) {
 
             // Respond with clients on 'names' 
             if (parsedInput.request === 'names')
-                return self.send('info', self.getAuthorizedNicknames(), 'server', client);
+                return self.send('info', self.getAuthorizedNicknames(), 'server', new Date(), client);
             
             // Broadcast message
             if (parsedInput.request === 'msg')
-                return self.broadcast('message', parsedInput.content, client);
+                return self.broadcast('message', parsedInput.content, client, new Date());
         }
     }    
     
@@ -219,7 +219,7 @@ function Server (host, port) {
             
             var parser = jsonStream.parse();
             client.pipe(parser).on('error', function () {
-                self.send('error', 'Wrong data format. Must be valid JSON.', 'server', client);
+                self.send('error', 'Wrong data format. Must be valid JSON.', 'server', new Date(), client);
                 self.destroyClient(client);
             });
             

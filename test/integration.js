@@ -220,14 +220,15 @@ describe('Integration', function () {
             var called = false;
             eirik.observers.onMessage.push(function (history) {
                 if (history.response === 'history')
-                    historyMessagesFromMike.push(history.content);
+                    historyMessagesFromMike.push(history);
                 
                 if (called === false && historyMessagesFromMike.length === 3) {
                     called = true;
 
-                    assert.equal(historyMessagesFromMike[0], 'heyyoo');
-                    assert.equal(historyMessagesFromMike[1], 'mayooo');
-                    assert.equal(historyMessagesFromMike[2], 'im a fishcake');
+                    // Test that the content of the history is correct
+                    assert.equal(historyMessagesFromMike[0].content, 'heyyoo');
+                    assert.equal(historyMessagesFromMike[1].content, 'mayooo');
+                    assert.equal(historyMessagesFromMike[2].content, 'im a fishcake');
 
                     server.shutdown();
                     done();
@@ -247,6 +248,57 @@ describe('Integration', function () {
                 });
             });
 
+        });
+
+        it('should supply the timestamp of when the messages were sent instead of now', function (done) {
+            var server = new Server();    
+            var mike   = new Client();    
+            var eirik  = new Client();    
+            var timeUntilEirikConnects = 20;
+
+            var messagesByMike = 0;
+            server.observers.onMessage.push(function (message) {
+                if (JSON.parse(message.toString()).request === 'msg'
+                &&  ++messagesByMike === 3) {
+                    setTimeout(function () {
+                        eirik.send('login eirik');
+                    }, timeUntilEirikConnects);
+                }
+            });
+            
+            var historyMessagesFromMike = [];
+            var called = false;
+            eirik.observers.onMessage.push(function (history) {
+                if (history.response === 'history')
+                    historyMessagesFromMike.push(history);
+                
+                if (called === false && historyMessagesFromMike.length === 3) {
+                    called = true;
+                    
+                    var timeMessageWasSent = new Date(historyMessagesFromMike[0].timestamp) * 1;
+                    var now = new Date() * 1;
+                    var diff = now - timeMessageWasSent;
+                    
+                    // Test that the timestamp is in the past
+                    assert.equal(diff > timeUntilEirikConnects, true);
+
+                    server.shutdown();
+                    done();
+                }
+            });
+
+            server.listen(function () {
+                mike.connect(function () {
+                    mike.send('login mike');            
+                    mike.send('msg heyyoo');            
+                    mike.send('msg mayooo');            
+                    mike.send('msg im a fishcake');            
+                });
+
+                eirik.connect(function () {
+                    eirik.send('help'); // idle 
+                });
+            });
         });
     });
     
