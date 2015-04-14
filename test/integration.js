@@ -357,6 +357,31 @@ describe('Integration', function () {
             });
         });
 
+        it('should be returned if trying to login with an already taken nickname', function (done) {
+            var server       = new Server();    
+            var mike         = new Client();    
+            var mikeImpostor = new Client();
+
+            server.listen(function () {
+                mike.connect(function () {
+                    mike.send('login mike');            
+                });
+
+                mikeImpostor.connect(function () {
+                    mikeImpostor.send('login mike');            
+                });
+            });
+
+            mikeImpostor.observers.onMessage.push(function (msg) {
+                assert.equal(msg.response, 'error');
+                assert.equal(msg.content.match(/taken/).index !== 0, true)
+
+                server.shutdown();
+                done();
+            });            
+        });
+
+
         it('should be returned when payload is single-quoted JSON', function (done) {
             var server = new Server();    
 
