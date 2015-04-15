@@ -281,6 +281,7 @@ describe('Integration', function () {
                     
                     // Test that the timestamp is in the past
                     assert.equal(diff > timeUntilEirikConnects, true);
+                    assert.notEqual(timeMessageWasSent, new Date() * 1);
 
                     server.shutdown();
                     done();
